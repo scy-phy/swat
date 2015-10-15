@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+from __future__ import print_function
 import cmd
 import importlib
 import os
@@ -39,7 +40,7 @@ class SwatCmd(cmd.Cmd):
         print('*** Nothing to display! Did you forget to load a module?')
 
     def __init__(self, **kwargs):
-        self.prompt = '({}) '.format(self.__class__.__name__)
+        self.prompt = '({}) '.format(self.__class__.__name__.lower())
         cmd.Cmd.__init__(self, **kwargs)
 
     def do_load(self, line):
@@ -54,9 +55,9 @@ class SwatCmd(cmd.Cmd):
             self.module = None
 
         if self.module:
-            self.prompt = '({}:{}) '.format(self.__class__.__name__, line)
+            self.prompt = '({}:{}) '.format(self.__class__.__name__.lower(), line)
         else:
-            self.prompt = '({}) '.format(self.__class__.__name__)
+            self.prompt = '({}) '.format(self.__class__.__name__.lower())
 
     def do_configure(self, line):
         """Configure loaded module"""
