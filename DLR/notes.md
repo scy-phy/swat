@@ -13,7 +13,7 @@ Each DLR ring is a separate network, each with at least one active ring supervis
 *  The switches to which a DLR switch is connected may be a non-DLR switch, possibly running a spanning tree network, but those switches will be blocked messages other than DLR messages, so that the ring network () won't be blocked.
 *  switch ports to which DLR networks are connected should be configured properly, over-complicated combination of DLR topology and non-DLR topology would result in undesired chaos.
 
-####DLR operations:
+###DLR operations:
 * DLR non-supervisor nodes:
 
  It is assumed that each DLR non-supervisor node has two ethernet ports, assumed implemented with embedded switches. When one non-supervisor node receives a packet, it has to decide whether the packet should be received by itself, or forward the packet to another node.
@@ -33,4 +33,23 @@ Each DLR ring is a separate network, each with at least one active ring supervis
 		2. at the supervisor, with the Beacon frames, some ring faults can be detected. (at non-supervisor nodes some ring faults can also be detected)
 		3. the Beacon frames carry a precedence, which tells DLR nodes to select an active one when there are more than one supervisors.
 
- 
+###DLR Failure States:
+* Some common failure cases:
+	1. link/physical layer failure recognised by adjacent nodes.
+	2. power failure or power cycling failure on a ring node, recognised by adjacent nodes.
+	3. Intentional media disconnect by the user, for plugging a new node or removing an existing node.
+
+In cases described above, the adjacent node who detects the failure would send a Link_Status message to the supervisor.
+
+* Aftering receiving the Link_Status message, the (active) supervisor would:
+	1. reconfigure the network by unblocking the previous blocked ethernet port on the other side, then flush its unicast MAC table.
+	2. immediately send Beacons and Announces informing ring nodes that the ring is currently faulted.
+	3. now the supervisor passes traffics through both of its ports.
+
+* The ring nodes also have following actions:
+	1.  flushing their respective unicast MAC table upon the direction where receives Link_Status message or the direction where it receives Beacon/Announce frames.
+* Uncommon failures:
+	1. physical layer and power supply works fine, but some higher layer factors, hardware/firmware fails leading to traffic loss.
+	2. some protocol unaware nodes are newly plugged into the ring. The active ring supervisor would detect Beacon frames loss on both of its ports and then send a Locate_Fault frame to diagnose the location of fualts.
+	3. Another possible fault is partial network fault. Traffic loss occurs on one particular direction. The active supervisor may detect this by monitoring Beacon frames on its ports. When such traffic loss detected, it would block one port and set a value in DLR object, user interventiion required.
+	4. if a series of rapid failure/restore cycles occur because of reasons like faulty connector, such condition would result in network instability and is hard to diagnose, the supervisor would set a status value in DLR object and user has to explicitly clear the errors.
