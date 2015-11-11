@@ -55,3 +55,22 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# idea project file
+.idea
+*.iml
+
+#pyenv file
+.python-version
+
+#pdf documents
+*.pdf
+
+#pcap file
+*.pcap*
+
+#source code of scapy
+src
+
+#html file
+*.html
