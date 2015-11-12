@@ -49,7 +49,7 @@ class DlrBeacon(DlrBase):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
         scapy_all.XShortEnumField('Ring_State', -1, {
             0x01: 'Ring_Normal_State',
             0x02: 'Ring_Fault_State'
@@ -58,7 +58,7 @@ class DlrBeacon(DlrBase):
         scapy_all.LongField('Beacon_Interval', -1),
         scapy_all.LongField('Beacon_Timeout', -1),
         # There are some doubts on the length of this field
-        scapy_all.StrLenField('Reserved', '', length_from=20),
+        scapy_all.StrLenField('Reserved', '', length_from=None),
 
     ]
 class DlrNeighborReqest(scapy_all.Packet):
@@ -84,7 +84,8 @@ class DlrNeighborReqest(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
+        scapy_all.StrLenField('Reserved','',length_from=None)
     ]
 
 class DlrNeighborResponse(scapy_all.Packet):
@@ -110,7 +111,7 @@ class DlrNeighborResponse(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
 
     ]
 class DlrLinkState(scapy_all.Packet):
@@ -136,7 +137,9 @@ class DlrLinkState(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
+        scapy_all.XShortField('Link/Neighbor_Status',-1),
+        scapy_all.StrLenField('Reserved',''),
 
     ]
 
@@ -163,8 +166,8 @@ class DlrLocateFault(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
-
+        scapy_all.XLongField('Sequence_ID', -1),
+        scapy_all.StrLenField('Reserved',''),
     ]
 
 class DlrAnnounce(scapy_all.Packet):
@@ -190,7 +193,12 @@ class DlrAnnounce(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
+        scapy_all.XShortEnumField('Ring_State',-1,{
+            0X01: 'RING_NORMAL_STATE',
+            0x02: 'RING_FAULT_STATE'
+        }),
+        scapy_all.StrLenField('Reserved','')
 
     ]
 
@@ -217,8 +225,12 @@ class DlrSignOn(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
+        scapy_all.XIntField('Num_nodes',-1),
+        # implement with the PacketListField
+        # scapy_all.FieldListField('Nodes_Info',None,),
 
+        scapy_all.StrLenField('Reserved','')
     ]
 
 class DlrAdvertise(scapy_all.Packet):
@@ -244,7 +256,7 @@ class DlrAdvertise(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
 
     ]
 
@@ -271,7 +283,7 @@ class DlrFlushTable(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
 
     ]
 
@@ -298,7 +310,7 @@ class DlrLearningUpdate(scapy_all.Packet):
             0x02: 'Port2'
         }),
         scapy_all.LongField('Source_IP', -1),
-        scapy_all.LongField('Sequence_ID', -1),
+        scapy_all.XLongField('Sequence_ID', -1),
 
     ]
 
