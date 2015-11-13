@@ -3,8 +3,8 @@
 ##Achieved:
 1. DLR Base Frame
 
-
 ##ToDo:
+
 ####Traced, but not implemented:
   1. DLR Beacon frame (0x01)
   2. Neighbor Request (0x02)
