@@ -2,6 +2,18 @@ __author__ = 'bernardyuan'
 from scapy import all as scapy_all
 from scapy import layers as layer
 
+# class DlrReservedField(scapy_all.StrField):
+#     def __init__(self, name, default, fmt='H', maxlen=64):
+#         scapy_all.StrField.__init__(self, name, default, fmt)
+#         self.maxlen = maxlen
+#
+#     def getfield(self, pkt, s):
+#         print s[self.maxlen-len(pkt):]
+#         print self.m2i(pkt,s[0:self.maxlen - len(pkt)])
+#         return s[self.maxlen - len(pkt):], self.m2i(pkt, s[0:self.maxlen - len(pkt)])
+
+
+# class DlrSignOnInfo()
 
 class DLR(scapy_all.Packet):
     name = 'DLR'
@@ -36,11 +48,11 @@ class DLR(scapy_all.Packet):
             scapy_all.IntField('Beacon_Interval', None),
             scapy_all.IntField('Beacon_Timeout', None),
             # There are some doubts on the length of this field
-            # scapy_all.StrLenField('Reserved', '', length_from=None),
+            scapy_all.StrFixedLenField('Reserved', None,length=22),
         ],
         2: [
             # Neighbor Request
-            # scapy_all.StrLenField('Reserved', '', length_from=None),
+            # DlrReservedField('Reserved', ""),
         ],
         3: [
             # Neighbor Response
@@ -48,11 +60,11 @@ class DLR(scapy_all.Packet):
         4: [
             # Link Status/Neighbor Status
             scapy_all.XShortField('Link/Neighbor_Status', -1),
-            # scapy_all.StrLenField('Reserved', ''),
+            # DlrReservedField('Reserved', ""),
         ],
         5: [
             # Locate Fault
-            # scapy_all.StrLenField('Reserved', ''),
+            # DlrReservedField('Reserved', ""),
         ],
         6: [
             # Announce
@@ -60,10 +72,11 @@ class DLR(scapy_all.Packet):
                 0X01: 'RING_NORMAL_STATE',
                 0x02: 'RING_FAULT_STATE'
             }),
-            # scapy_all.StrLenField('Reserved', ''),
+            # DlrReservedField('Reserved', ""),
         ],
         7: [
             # SignOn
+
         ],
         8: [
             # Advertise
@@ -91,7 +104,6 @@ class DLR(scapy_all.Packet):
                 fld_list += self.frames[self.fields['Frame_Type']]
                 self.fields_desc = fld_list[:]
                 flist.reverse()
-
         assert (raw.endswith(s))
         if s:
             self.raw_packet_cache = raw[:-len(s)]
@@ -99,6 +111,7 @@ class DLR(scapy_all.Packet):
             self.raw_packet_cache = raw
         self.explicit = 1
         return s
+
 
 scapy_all.bind_layers(layer.l2.Dot1Q, DLR, type=0x80e1)
 # scapy_all.bind_layers(DlrBase,DlrBeacon,Frame_Type=1)
