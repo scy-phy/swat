@@ -13,7 +13,12 @@ from scapy import layers as layer
 #         return s[self.maxlen - len(pkt):], self.m2i(pkt, s[0:self.maxlen - len(pkt)])
 
 
-# class DlrSignOnInfo()
+class DlrSignOnInfo(scapy_all.Packet):
+    name = 'SignOnInfo'
+    fields_desc = [
+        scapy_all.MACField('MAC_Address',None),
+        scapy_all.IPField('IP_Address',None),
+    ]
 
 class DLR(scapy_all.Packet):
     name = 'DLR'
@@ -81,6 +86,8 @@ class DLR(scapy_all.Packet):
         ],
         7: [
             # SignOn
+            # scapy_all.ShortField('Node_Num',0),
+            # scapy_all.PacketListField('SignOnInfo',[],DlrSignOnInfo,count_from='Node_Num'),
             scapy_all.StrField('Reserved',None),
         ],
         8: [
