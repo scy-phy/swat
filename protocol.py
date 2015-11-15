@@ -48,35 +48,40 @@ class DLR(scapy_all.Packet):
             scapy_all.IntField('Beacon_Interval', None),
             scapy_all.IntField('Beacon_Timeout', None),
             # There are some doubts on the length of this field
-            scapy_all.StrFixedLenField('Reserved', None,length=22),
+            # scapy_all.StrFixedLenField('Reserved', None,length=32),
+            scapy_all.StrField('Reserved',None),
         ],
         2: [
             # Neighbor Request
+            scapy_all.StrField('Reserved',None),
             # DlrReservedField('Reserved', ""),
         ],
         3: [
-            # Neighbor Response
+            # Neighbor Respnse
         ],
         4: [
             # Link Status/Neighbor Status
-            scapy_all.XShortField('Link/Neighbor_Status', -1),
+            scapy_all.XByteField('Link/Neighbor_Status', None),
+            scapy_all.StrField('Reserved',None),
             # DlrReservedField('Reserved', ""),
         ],
         5: [
             # Locate Fault
+            scapy_all.StrField('Reserved',None),
             # DlrReservedField('Reserved', ""),
         ],
         6: [
             # Announce
-            scapy_all.XShortEnumField('Ring_State', -1, {
+            scapy_all.ByteEnumField('Ring_State', None, {
                 0X01: 'RING_NORMAL_STATE',
                 0x02: 'RING_FAULT_STATE'
             }),
+            scapy_all.StrField('Reserved',None),
             # DlrReservedField('Reserved', ""),
         ],
         7: [
             # SignOn
-
+            scapy_all.StrField('Reserved',None),
         ],
         8: [
             # Advertise
