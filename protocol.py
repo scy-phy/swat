@@ -1,7 +1,7 @@
 __author__ = 'bernardyuan'
 from scapy import all as scapy_all
 from scapy import layers as layer
-
+import struct
 # class DlrReservedField(scapy_all.StrField):
 #     def __init__(self, name, default, fmt='H', maxlen=64):
 #         scapy_all.StrField.__init__(self, name, default, fmt)
@@ -13,12 +13,36 @@ from scapy import layers as layer
 #         return s[self.maxlen - len(pkt):], self.m2i(pkt, s[0:self.maxlen - len(pkt)])
 
 
-class DlrSignOnInfo(scapy_all.Packet):
-    name = 'SignOnInfo'
-    fields_desc = [
-        scapy_all.MACField('MAC_Address',None),
-        scapy_all.IPField('IP_Address',None),
-    ]
+class DlrSignOnInfoList(scapy_all.Field):
+    cls_list = [scapy_all.MACField('MACAddress',None),scapy_all.IPField('IPAddress',None)]
+    def __init__(self, name, default, fmt="H"):
+        self.name = name
+        if fmt[0] in "@=<>!":
+            self.fmt = fmt
+        else:
+            self.fmt = "!"+fmt
+        self.default = self.any2i(None,default)
+        self.sz = struct.calcsize(self.fmt)
+        self.owners = []
+        self.fields = {}
+    def getfield(self, pkt, s):
+        nn = pkt.fields["Node_Num"]
+        i = 0
+        while i < nn:
+            ccls = self.cls_list[0]
+            s, fval = ccls.getfield(self,s)
+            self.fields[ccls.name+str(i)] = fval
+            ccls = self.cls_list[1]
+            s, fval = ccls.getfield(self, s)
+            self.fields[ccls.name+str(i)] = fval
+            i += 1
+        return s, self.fields
+
+
+
+
+
+
 
 class DLR(scapy_all.Packet):
     name = 'DLR'
@@ -86,8 +110,8 @@ class DLR(scapy_all.Packet):
         ],
         7: [
             # SignOn
-            # scapy_all.ShortField('Node_Num',0),
-            # scapy_all.PacketListField('SignOnInfo',[],DlrSignOnInfo,count_from='Node_Num'),
+            scapy_all.ShortField('Node_Num',0),
+            DlrSignOnInfoList('SignOnInfo',None),
             scapy_all.StrField('Reserved',None),
         ],
         8: [
@@ -100,6 +124,7 @@ class DLR(scapy_all.Packet):
             # Learing Update
         ],
     }
+    frame_type = 0
 
     def do_dissect(self, s):
         flist = self.fields_desc[:]
@@ -108,9 +133,19 @@ class DLR(scapy_all.Packet):
         raw = s
         while s and flist:
             f = flist.pop()
+            # if self.frame_type == 7 and f.name == "Node_Num":
+            #     s, fval  = f.getfield(self, s)
+            #     self.fields[f.name] = fval
+            #     node_num = fval
+            #     nn = 0
+            #     ip_mac_list = []
+            #     while nn < node_num:
+            #
+
             s, fval = f.getfield(self, s)
             self.fields[f.name] = fval
             if f.name == 'Frame_Type':
+                self.frame_type = fval
                 flist.reverse()
                 flist += self.frames[self.fields['Frame_Type']][:]
                 fld_list += self.frames[self.fields['Frame_Type']]
@@ -123,7 +158,6 @@ class DLR(scapy_all.Packet):
             self.raw_packet_cache = raw
         self.explicit = 1
         return s
-
 
 scapy_all.bind_layers(layer.l2.Dot1Q, DLR, type=0x80e1)
 # scapy_all.bind_layers(DlrBase,DlrBeacon,Frame_Type=1)
