@@ -1,60 +1,82 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015 David I. Urbina, david.urbina@utdallas.edu
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 from __future__ import print_function, division
+
 import ctypes
 import math
-import threading
-import sys
 import signal
+import sys
+import threading
 
 from scapy import all as scapy_all
 
 import commons.util
-import swat
 import scaling
-import filters
+import swat
 
-valve = 0
-pump = 0
+_pump1_in = 0
+_pump = 0
 
-olevel = 0.695
-rlevel = 0.695
-elevel = 0.695
+_olevel = 1.004
+_rlevel = 1.004
+_elevel = 1.004
 
-L = 0.1
-tau = 0.1
-alpha = 0.005
+L = 0.05
+tau = 1000
+alpha = 0.002
 cusum = 0
 
-FLOW = 2.5  # Water flow in m^3/h
+_flow = 2.5  # Water flow in m^3/h
 DIA = 1.38  # Tank 1 diameter
 
-stop_sniffer = False
+_stop_sniffer = False
+_is_first_pck = True
 
 
 def get_model_parameters(packet):
     if swat.SWAT_P1_RIO_AI in packet:
-        global rlevel
+        global _rlevel, _flow
         l = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level)
-        l = filters.scale(l.value, scaling.P1Level)
-        rlevel = l * 0.001
+        l = scaling.current_to_signal(l.value, scaling.P1Level)
+        f = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].flow)
+        _flow = scaling.current_to_signal(f.value, scaling.P1Flow)
+        _rlevel = l * 0.001
 
     if swat.SWAT_P1_RIO_DI in packet:
-        global valve, pump
-        valve = packet[swat.SWAT_P1_RIO_DI].valve_open
-        pump = packet[swat.SWAT_P1_RIO_DI].pump1_run
+        global _pump1_in, _pump
+        _valve = packet[swat.SWAT_P1_RIO_DI].valve_open
+        _pump = packet[swat.SWAT_P1_RIO_DI].pump1_run
 
 
 def calculate_cusum():
-    global valve, pump, rlevel, elevel, cusum
-    u = FLOW / (3600 * math.pi * math.pow(DIA / 2, 2))  # Water volume change
-    u *= valve - pump  # Direction of water volume change
-    elevel = elevel + u + L * (rlevel - elevel)
+    global _pump1_in, _pump, _rlevel, _elevel, cusum
+    u = _flow / (3600 * math.pi * math.pow(DIA / 2, 2))  # Water volume change
+    u *= _valve - _pump  # Direction of water volume change
+    _elevel = _elevel + u + L * (_rlevel - _elevel)
 
-    cusum += abs(rlevel - elevel) - alpha
+    cusum += abs(_rlevel - _elevel) - alpha
     cusum = max(cusum, 0)
 
-    # print('{} {}'.format(valve, pump), end=' ')
-    print('{},{},{},{},{}'.format(olevel, rlevel, elevel, abs(rlevel - elevel), cusum), end='')
-    # if abs(rlevel - elevel) > T:
+    print('{},{},{},{},{}'.format(_olevel, _rlevel, _elevel, abs(_rlevel - _elevel), cusum), end='')
     if cusum > tau:
         cusum = 0
         print(', SWaTAssault detected!!!!')
@@ -66,14 +88,17 @@ def read_real_level(packet):
     if swat.SWAT_P1_RIO_AI in packet:
         l = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level).value
         slevel = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level)
-        l = filters.scale(slevel.value, scaling.P1Level)
-        global olevel
-        olevel = l * 0.001
+        l = scaling.current_to_signal(slevel.value, scaling.P1Level)
+        global _olevel, _elevel, _is_first_pck
+        _olevel = l * 0.001
+        if _is_first_pck:
+            _elevel = _olevel
+            _is_first_pck = False
 
 
 def stop(p):
-    global stop_sniffer
-    return stop_sniffer
+    global _stop_sniffer
+    return _stop_sniffer
 
 
 def start():
@@ -119,13 +144,13 @@ def params():
 
 
 def __setup():
-    global stop_sniffer
-    stop_sniffer = False
+    global _stop_sniffer
+    _stop_sniffer = False
 
 
 def __setdown():
-    global stop_sniffer
-    stop_sniffer = True
+    global _stop_sniffer
+    _stop_sniffer = True
 
 
 if __name__ == '__main__':

