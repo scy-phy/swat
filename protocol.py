@@ -38,12 +38,6 @@ class DlrSignOnInfoList(scapy_all.Field):
             i += 1
         return s, self.fields
 
-
-
-
-
-
-
 class DLR(scapy_all.Packet):
     name = 'DLR'
     fields_desc = [
@@ -124,7 +118,35 @@ class DLR(scapy_all.Packet):
             # Learing Update
         ],
     }
-    frame_type = 0
+    def __init__(self, _pkt="", post_transform=None, _internal=0, _underlayer=None, **fields):
+        self.time  = time.time()
+        self.sent_time = 0
+        if self.name is None:
+            self.name = self.__class__.__name__
+        self.aliastypes = [ self.__class__ ] + self.aliastypes
+        self.default_fields = {}
+        self.overloaded_fields = {}
+        self.fields={}
+        self.fieldtype={}
+        self.packetfields=[]
+        self.__dict__["payload"] = NoPayload()
+        self.init_fields()
+        self.underlayer = _underlayer
+        self.initialized = 1
+        self.original = _pkt
+        if _pkt:
+            self.dissect(_pkt)
+            if not _internal:
+                self.dissection_done(self)
+        for f in fields.keys():
+            self.fields[f] = self.get_field(f).any2i(self,fields[f])
+        if type(post_transform) is list:
+            self.post_transforms = post_transform
+        elif post_transform is None:
+            self.post_transforms = []
+        else:
+            self.post_transforms = [post_transform]
+
 
     def do_dissect(self, s):
         flist = self.fields_desc[:]
@@ -145,7 +167,6 @@ class DLR(scapy_all.Packet):
             s, fval = f.getfield(self, s)
             self.fields[f.name] = fval
             if f.name == 'Frame_Type':
-                self.frame_type = fval
                 flist.reverse()
                 flist += self.frames[self.fields['Frame_Type']][:]
                 fld_list += self.frames[self.fields['Frame_Type']]
