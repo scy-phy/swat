@@ -19,10 +19,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+"""Sniffing functions to be used as parameter prn of the "sniff" command in
+Scapy 2.3.1.
+"""
 from __future__ import print_function
-import swat
+
 import ctypes
+
 import scaling
+import swat
+from scaling import current_to_signal
 
 
 def show_p1_analog_inputs(packet):
@@ -31,8 +37,19 @@ def show_p1_analog_inputs(packet):
         flow = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].flow).value
         slevel = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level)
         sflow = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].flow)
-        slevel = scale(slevel.value, scaling.P1Level)
-        sflow = scale(sflow.value, scaling.P1Flow)
+        slevel = current_to_signal(slevel.value, scaling.P1Level)
+        sflow = current_to_signal(sflow.value, scaling.P1Flow)
+        print('level: {:2f} mm ({}) flow: {:2f} m^2/h ({})'.format(slevel, level, sflow, flow))
+
+
+def show_p1_w_analog_inputs(packet):
+    if swat.SWAT_P1_WRIO_AI in packet:
+        level = ctypes.c_short(packet[swat.SWAT_P1_WRIO_AI].level).value
+        flow = ctypes.c_short(packet[swat.SWAT_P1_WRIO_AI].flow).value
+        slevel = ctypes.c_short(packet[swat.SWAT_P1_WRIO_AI].level)
+        sflow = ctypes.c_short(packet[swat.SWAT_P1_WRIO_AI].flow)
+        slevel = current_to_signal(slevel.value, scaling.P1Level)
+        sflow = current_to_signal(sflow.value, scaling.P1Flow)
         print('level: {:2f} mm ({}) flow: {:2f} m^2/h ({})'.format(slevel, level, sflow, flow))
 
 
@@ -60,22 +77,3 @@ def show_p1_digital_outputs(packet):
             s += 'pump2_start: ({})\n'.format(packet[swat.SWAT_P1_RIO_DO].pump2_start)
             s += 'pump1_start: ({})\n'.format(packet[swat.SWAT_P1_RIO_DO].pump1_start)
             print(s)
-
-
-def scale(raw_in, scaling):
-    """Scales the input signal from RIO 4 - 20 mA to the human readable measurements."""
-    result = raw_in - scaling.RAWMIN
-    result *= (scaling.EUMAX - scaling.EUMIN) / (scaling.RAWMAX - scaling.RAWMIN)
-    result += scaling.EUMIN
-    return result
-
-
-def reverse_scale(scale_in, scaling):
-    """Scales the input signal from human readable measurements to RIO 4 - 20 mA."""
-    result = scale_in - scaling.EUMIN
-    result /= (scaling.EUMAX - scaling.EUMIN) / (scaling.RAWMAX - scaling.RAWMIN)
-    result += scaling.RAWMIN
-    return result
-
-
-

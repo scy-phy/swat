@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""Scapy Dissector for Ethernet/IP I/O messages at the Ring Level of the
+"""Scapy Dissector for Ethernet/IP Implicit I/O messages at the Ring Level of the
 Secure Water Testbed (SWaT) at the Singapore University of Technology and Design
 
 Documentation: SWaT's Control Panels and Electrical Drawings manual.
@@ -87,9 +87,22 @@ class SWAT_P1_RIO_AI(scapy_all.Packet):
     ]
 
 
+class SWAT_P1_WRIO_AI(scapy_all.Packet):
+    name = "SWAT_P1_WRIO_AI"
+    fields_desc = [
+        scapy_all.LEShortField('counter', 0),
+        scapy_all.LEIntField('padding', 0),
+        scapy_all.LEShortField('level', 0),
+        scapy_all.LEShortField('flow', 0),
+        scapy_all.FieldListField("spare", [], scapy_all.LEShortField("", 0),
+                                 length_from=lambda p: p.underlayer.length - 10),
+    ]
+
+
 scapy_all.bind_layers(scapy_all.TCP, enip_cpf.ENIP_CPF, dport=2222)
 scapy_all.bind_layers(scapy_all.UDP, enip_cpf.ENIP_CPF, sport=2222)
 scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_RIO_AI, length=32)
 scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_RIO_DI, length=10)
 scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_RIO_DO, length=22)
-scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_PLC, length=8)
+scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_PLC, length=8)  # Comment for WRIO
+# scapy_all.bind_layers(enip_cpf.CPF_AddressDataItem, SWAT_P1_WRIO_AI, length=10)  # Uncomment for WRIO
