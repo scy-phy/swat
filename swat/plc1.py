@@ -1,6 +1,5 @@
-#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 David I. Urbina, UTD
+# Copyright (c) 2015 David I. Urbina, david.urbina@utdallas.edu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,15 +18,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""Scapy Dissector for Ethernet/IP Implicit I/O messages at the Ring Level of the
-Secure Water Testbed (SWaT) at the Singapore University of Technology and Design
-
-Documentation: SWaT's Control Panels and Electrical Drawings manual.
-"""
-
+"""Scapy Dissector for Ethernet/IP Implicit I/O messages of PLC 1."""
 from scapy import all as scapy_all
 
 import enip_cpf
+
+__all__ = ['SWAT_P1_PLC', 'SWAT_P1_RIO_DO', 'SWAT_P1_RIO_DI', 'SWAT_P1_RIO_AI', 'SWAT_P1_WRIO_AI']
 
 
 class SWAT_P1_PLC(scapy_all.Packet):
