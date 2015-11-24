@@ -30,11 +30,12 @@ import threading
 from scapy import all as scapy_all
 
 import commons.util
-import scaling
-import swat
+from swat.plc1 import SWAT_P1_RIO_AI, SWAT_P1_RIO_DI
+from swat.scaling import current_to_signal, P1Level, P1Flow
 
 _pump1_in = 0
 _pump = 0
+_valve = 0
 
 _olevel = 1.004
 _rlevel = 1.004
@@ -53,18 +54,18 @@ _is_first_pck = True
 
 
 def get_model_parameters(packet):
-    if swat.SWAT_P1_RIO_AI in packet:
+    if SWAT_P1_RIO_AI in packet:
         global _rlevel, _flow
-        l = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level)
-        l = scaling.current_to_signal(l.value, scaling.P1Level)
-        f = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].flow)
-        _flow = scaling.current_to_signal(f.value, scaling.P1Flow)
+        l = ctypes.c_short(packet[SWAT_P1_RIO_AI].level)
+        l = current_to_signal(l.value, P1Level)
+        f = ctypes.c_short(packet[SWAT_P1_RIO_AI].flow)
+        _flow = current_to_signal(f.value, P1Flow)
         _rlevel = l * 0.001
 
-    if swat.SWAT_P1_RIO_DI in packet:
+    if SWAT_P1_RIO_DI in packet:
         global _pump1_in, _pump
-        _valve = packet[swat.SWAT_P1_RIO_DI].valve_open
-        _pump = packet[swat.SWAT_P1_RIO_DI].pump1_run
+        _valve = packet[SWAT_P1_RIO_DI].valve_open
+        _pump = packet[SWAT_P1_RIO_DI].pump1_run
 
 
 def calculate_cusum():
@@ -85,10 +86,10 @@ def calculate_cusum():
 
 
 def read_real_level(packet):
-    if swat.SWAT_P1_RIO_AI in packet:
-        l = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level).value
-        slevel = ctypes.c_short(packet[swat.SWAT_P1_RIO_AI].level)
-        l = scaling.current_to_signal(slevel.value, scaling.P1Level)
+    if SWAT_P1_RIO_AI in packet:
+        l = ctypes.c_short(packet[SWAT_P1_RIO_AI].level).value
+        slevel = ctypes.c_short(packet[SWAT_P1_RIO_AI].level)
+        l = current_to_signal(slevel.value, P1Level)
         global _olevel, _elevel, _is_first_pck
         _olevel = l * 0.001
         if _is_first_pck:

