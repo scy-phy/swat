@@ -1,7 +1,7 @@
 __author__ = 'bernardyuan'
 from scapy import all as scapy_all
 from scapy import layers as layer
-import struct
+import struct,time
 # class DlrReservedField(scapy_all.StrField):
 #     def __init__(self, name, default, fmt='H', maxlen=64):
 #         scapy_all.StrField.__init__(self, name, default, fmt)
@@ -49,7 +49,8 @@ class DLR(scapy_all.Packet):
             3: 'Neighbor_Response',
             4: 'Link_State',
             5: 'Locate_Fault',
-            6: 'Announce', 7: 'Sign_On',
+            6: 'Announce',
+            7: 'Sign_On',
             8: 'Advertise',
             9: 'Flush_Tables',
             10: 'Learning_Update'
@@ -129,7 +130,13 @@ class DLR(scapy_all.Packet):
         self.fields={}
         self.fieldtype={}
         self.packetfields=[]
-        self.__dict__["payload"] = NoPayload()
+        self.__dict__["payload"] = scapy_all.NoPayload()
+        print 'fields:',fields
+        # add more fields into field_desc according to the value of 'Frame_Type' field
+        field_list = self.fields_desc[:]
+        if 'Frame_Type' in fields:
+            field_list += self.frames[fields['Frame_Type']][:]
+            self.fields_desc = field_list[:]
         self.init_fields()
         self.underlayer = _underlayer
         self.initialized = 1
@@ -155,21 +162,11 @@ class DLR(scapy_all.Packet):
         raw = s
         while s and flist:
             f = flist.pop()
-            # if self.frame_type == 7 and f.name == "Node_Num":
-            #     s, fval  = f.getfield(self, s)
-            #     self.fields[f.name] = fval
-            #     node_num = fval
-            #     nn = 0
-            #     ip_mac_list = []
-            #     while nn < node_num:
-            #
-
-            s, fval = f.getfield(self, s)
             self.fields[f.name] = fval
             if f.name == 'Frame_Type':
                 flist.reverse()
                 flist += self.frames[self.fields['Frame_Type']][:]
-                fld_list += self.frames[self.fields['Frame_Type']]
+                fld_list += self.frames[self.fields['Frame_Type']][:]
                 self.fields_desc = fld_list[:]
                 flist.reverse()
         assert (raw.endswith(s))
