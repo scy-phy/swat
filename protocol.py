@@ -147,6 +147,8 @@ class DLR(scapy_all.Packet):
             self.dissect(_pkt)
             if not _internal:
                 self.dissection_done(self)
+        if fields:
+            self.explicit =1
         for f in fields.keys():
             print "fields are not empty:",f
             self.fields[f] = self.get_field(f).any2i(self,fields[f])
@@ -159,6 +161,12 @@ class DLR(scapy_all.Packet):
         else:
             print "neither none or list"
             self.post_transforms = [post_transform]
+        if fields:
+            self.raw_packet_cache = self.do_build()
+        if self.underlayer:
+            self.underlayer.explicit =1
+            if self.underlayer.underlayer:
+                self.underlayer.underlayer.explicit = 1
     def copy(self):
         """Returns a deep copy of the instance."""
         clone = self.__class__(**self.fields)
@@ -173,7 +181,6 @@ class DLR(scapy_all.Packet):
         clone.payload.add_underlayer(clone)
         return clone
 
-
     def do_dissect(self, s):
         flist = self.fields_desc[:]
         fld_list = self.fields_desc[:]
@@ -181,6 +188,8 @@ class DLR(scapy_all.Packet):
         raw = s
         while s and flist:
             f = flist.pop()
+            if DLR not in f.owners:
+                f.register_owner(DLR);
             print f.name
             s,fval = f.getfield(self,s)
             self.fields[f.name] = fval

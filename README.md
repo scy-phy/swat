@@ -6,8 +6,7 @@
 ##ToDo:
 ### gaps between the hex and internal:
 * doubt: whether it is a deep copy..
-* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing
-* the all.hexdump of copied layer. need to read how str()/ hexdump() is propagated to the next layer
+* the hexdump()/str() problem is bascially solved now, as long as you create a packet from hex raw data or manually set each layer's explicit value as 1
 ####Traced, but not implemented:
   1. determine the length of all the reserved field
   2. conceive a better solution to solve the reserved field problem
