@@ -131,10 +131,11 @@ class DLR(scapy_all.Packet):
         self.fieldtype={}
         self.packetfields=[]
         self.__dict__["payload"] = scapy_all.NoPayload()
-        print 'fields:',fields
+        print "int init, pkt:",scapy_all.hexdump(_pkt), " fields:",fields
         # add more fields into field_desc according to the value of 'Frame_Type' field
         field_list = self.fields_desc[:]
-        if 'Frame_Type' in fields:
+        if fields and 'Frame_Type' in fields:
+            print "bernard add attributes"
             field_list += self.frames[fields['Frame_Type']][:]
             self.fields_desc = field_list[:]
         self.init_fields()
@@ -142,16 +143,21 @@ class DLR(scapy_all.Packet):
         self.initialized = 1
         self.original = _pkt
         if _pkt:
+            print "building from pkt"
             self.dissect(_pkt)
             if not _internal:
                 self.dissection_done(self)
         for f in fields.keys():
+            print "fields are not empty:",f
             self.fields[f] = self.get_field(f).any2i(self,fields[f])
         if type(post_transform) is list:
+            print "type post transform is list"
             self.post_transforms = post_transform
         elif post_transform is None:
+            print "post_transform is None"
             self.post_transforms = []
         else:
+            print "neither none or list"
             self.post_transforms = [post_transform]
 
 
@@ -162,6 +168,8 @@ class DLR(scapy_all.Packet):
         raw = s
         while s and flist:
             f = flist.pop()
+            print f.name
+            s,fval = f.getfield(self,s)
             self.fields[f.name] = fval
             if f.name == 'Frame_Type':
                 flist.reverse()
