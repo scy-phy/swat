@@ -4,7 +4,10 @@
 1. DLR Frames
 
 ##ToDo:
-
+### gaps between the hex and internal:
+* doubt: whether it is a deep copy..
+* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing* current problem, after the stacked protocols are implemented, the informations after the common information is missing
+* the all.hexdump of copied layer. need to read how str()/ hexdump() is propagated to the next layer
 ####Traced, but not implemented:
   1. determine the length of all the reserved field
   2. conceive a better solution to solve the reserved field problem

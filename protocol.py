@@ -159,6 +159,19 @@ class DLR(scapy_all.Packet):
         else:
             print "neither none or list"
             self.post_transforms = [post_transform]
+    def copy(self):
+        """Returns a deep copy of the instance."""
+        clone = self.__class__(**self.fields)
+        clone.default_fields = self.default_fields.copy()
+        clone.overloaded_fields = self.overloaded_fields.copy()
+        clone.overload_fields = self.overload_fields.copy()
+        clone.underlayer = self.underlayer
+        clone.explicit = self.explicit
+        clone.raw_packet_cache = self.raw_packet_cache
+        clone.post_transforms = self.post_transforms[:]
+        clone.__dict__["payload"] = self.payload.copy()
+        clone.payload.add_underlayer(clone)
+        return clone
 
 
     def do_dissect(self, s):
