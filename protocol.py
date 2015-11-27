@@ -2,17 +2,7 @@ __author__ = 'bernardyuan'
 from scapy import all as scapy_all
 from scapy import layers as layer
 import struct,time
-# class DlrReservedField(scapy_all.StrField):
-#     def __init__(self, name, default, fmt='H', maxlen=64):
-#         scapy_all.StrField.__init__(self, name, default, fmt)
-#         self.maxlen = maxlen
-#
-#     def getfield(self, pkt, s):
-#         print s[self.maxlen-len(pkt):]
-#         print self.m2i(pkt,s[0:self.maxlen - len(pkt)])
-#         return s[self.maxlen - len(pkt):], self.m2i(pkt, s[0:self.maxlen - len(pkt)])
-
-
+# The field class specially designed for Sign On Info
 class DlrSignOnInfoList(scapy_all.Field):
     cls_list = [scapy_all.MACField('MACAddress',None),scapy_all.IPField('IPAddress',None)]
     def __init__(self, name, default, fmt="H"):
@@ -25,6 +15,7 @@ class DlrSignOnInfoList(scapy_all.Field):
         self.sz = struct.calcsize(self.fmt)
         self.owners = []
         self.fields = {}
+    # parse the MAC addresses and IP addresses from the raw data
     def getfield(self, pkt, s):
         nn = pkt.fields["Node_Num"]
         i = 0
@@ -39,6 +30,7 @@ class DlrSignOnInfoList(scapy_all.Field):
             self.fields["IPAddress"].append(fval)
             i += 1
         return s, self.fields
+    # encode the MAC addresses and IP addresses into raw data
     def addfield(self, pkt, s, val):
         i = 0
         nn = pkt.fields["Node_Num"]
@@ -49,6 +41,7 @@ class DlrSignOnInfoList(scapy_all.Field):
             s = ccls.addfield(pkt,s,self.fields["IPAddress"][i])
             i += 1
         return s
+# The DLR protocol
 class DLR(scapy_all.Packet):
     name = 'DLR'
     fields_desc = [
@@ -142,6 +135,7 @@ class DLR(scapy_all.Packet):
             # Learing Update
         ],
     }
+    # constructor
     def __init__(self, _pkt="", post_transform=None, _internal=0, _underlayer=None, **fields):
         self.time  = time.time()
         self.sent_time = 0
@@ -154,42 +148,37 @@ class DLR(scapy_all.Packet):
         self.fieldtype={}
         self.packetfields=[]
         self.__dict__["payload"] = scapy_all.NoPayload()
-        print "int init, pkt:",scapy_all.hexdump(_pkt), " fields:",fields
         # add more fields into field_desc according to the value of 'Frame_Type' field
         field_list = self.fields_desc[:]
         if fields and 'Frame_Type' in fields:
-            print "bernard add attributes"
             field_list += self.frames[fields['Frame_Type']][:]
             self.fields_desc = field_list[:]
         self.init_fields()
         self.underlayer = _underlayer
         self.initialized = 1
         self.original = _pkt
+        # if construct from raw data, dissect the raw data
         if _pkt:
-            print "building from pkt"
             self.dissect(_pkt)
             if not _internal:
                 self.dissection_done(self)
+        # if construct from keywords
         if fields:
+        # set the explicit value as 1, IMPORTANT for building packet
             self.explicit =1
+        # add the values in the keywords in to fields
         for f in fields.keys():
-            print "fields are not empty:",f
             self.fields[f] = self.get_field(f).any2i(self,fields[f])
         if type(post_transform) is list:
-            print "type post transform is list"
             self.post_transforms = post_transform
         elif post_transform is None:
-            print "post_transform is None"
             self.post_transforms = []
         else:
-            print "neither none or list"
             self.post_transforms = [post_transform]
+        # if built from keywords, initialize the raw_packet_cache as it is build from raw data
         if fields:
             self.raw_packet_cache = self.do_build()
-        if self.underlayer:
-            self.underlayer.explicit =1
-            if self.underlayer.underlayer:
-                self.underlayer.underlayer.explicit = 1
+    # made some modifications to the original copy function, deep copy all the fields not only the common fields
     def copy(self):
         """Returns a deep copy of the instance."""
         clone = self.__class__(**self.fields)
@@ -204,8 +193,10 @@ class DLR(scapy_all.Packet):
         clone.payload.add_underlayer(clone)
         return clone
 
+    # dissect function
     def do_dissect(self, s):
         flist = self.fields_desc[:]
+        # save the fields_desc temporarily
         fld_list = self.fields_desc[:]
         flist.reverse()
         raw = s
@@ -213,9 +204,10 @@ class DLR(scapy_all.Packet):
             f = flist.pop()
             if DLR not in f.owners:
                 f.register_owner(DLR);
-            print f.name
+            # print f.name
             s,fval = f.getfield(self,s)
             self.fields[f.name] = fval
+            # when we know the frame type, add additional types
             if f.name == 'Frame_Type':
                 flist.reverse()
                 flist += self.frames[self.fields['Frame_Type']][:]
