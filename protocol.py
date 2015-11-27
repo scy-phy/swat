@@ -28,16 +28,27 @@ class DlrSignOnInfoList(scapy_all.Field):
     def getfield(self, pkt, s):
         nn = pkt.fields["Node_Num"]
         i = 0
+        self.fields["MACAddress"] = []
+        self.fields["IPAddress"] = []
         while i < nn:
             ccls = self.cls_list[0]
             s, fval = ccls.getfield(self,s)
-            self.fields[ccls.name+str(i)] = fval
+            self.fields["MACAddress"].append(fval)
             ccls = self.cls_list[1]
             s, fval = ccls.getfield(self, s)
-            self.fields[ccls.name+str(i)] = fval
+            self.fields["IPAddress"].append(fval)
             i += 1
         return s, self.fields
-
+    def addfield(self, pkt, s, val):
+        i = 0
+        nn = pkt.fields["Node_Num"]
+        while i<nn:
+            ccls = self.cls_list[0]
+            s = ccls.addfield(pkt,s,self.fields["MACAddress"][i])
+            ccls = self.cls_list[1]
+            s = ccls.addfield(pkt,s,self.fields["IPAddress"][i])
+            i += 1
+        return s
 class DLR(scapy_all.Packet):
     name = 'DLR'
     fields_desc = [
