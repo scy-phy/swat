@@ -85,7 +85,19 @@ class DLR(scapy_all.Packet):
         ],
         4: [
             # Link Status/Neighbor Status
-            scapy_all.XByteField('Link/Neighbor_Status', None),
+            scapy_all.BitEnumField('Link/Neighbor_Status_Frame_Type',None,1,{
+                1:'Neighbor_Status_Frame',
+                0:'Link_Status_Frame'
+            }),
+            scapy_all.BitField('Link/Neighbor_Status_Reserved',None, 5),
+            scapy_all.BitEnumField('Port2_Active',None,1,{
+                1:"True",
+                0:"False"
+            }),
+            scapy_all.BitEnumField("Port1_Active",None,1,{
+                1:"True",
+                0:"False"
+            }),
             scapy_all.StrField('Reserved',None),
             # DlrReservedField('Reserved', ""),
         ],
