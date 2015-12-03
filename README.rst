@@ -18,14 +18,10 @@ Requirements
 Interactive Mode
 ================
 
-To start interactive mode run:
+Starting interactive mode run::
 
-::
-    sudo python swat
+    $ sudo python swat
 
-You should see:
-
-::
     WARNING: No route found for IPv6 destination :: (no default route?)
     Welcome to Scapy (2.3.1)
     Add-on: Scapy Dissector for Ethernet/IP Implicit I/O messages
@@ -35,9 +31,8 @@ You should see:
 Examples on PLC-DLR-1
 ---------------------
 
-Reading Analog Inpunts:
+Reading Analog Inputs::
 
-::
     >>> sniff(store=0, iface='eth0', prn=lambda p: show_p1_analog_inputs(p))
     level: 300 mm (1231) flow: 2.4 m^2/h (321)
     level: 300 mm (1232) flow: 2.4 m^2/h (321)
