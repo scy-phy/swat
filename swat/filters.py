@@ -44,6 +44,7 @@ def show_p1_analog_inputs(packet):
 
 
 def show_p1_w_analog_inputs(packet):
+    # TODO: this function needs to be tested
     if SWAT_P1_WRIO_AI in packet:
         level = ctypes.c_short(packet[SWAT_P1_WRIO_AI].level).value
         flow = ctypes.c_short(packet[SWAT_P1_WRIO_AI].flow).value
