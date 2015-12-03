@@ -80,11 +80,11 @@ def start():
     nfqueue.bind(0, __inject)
     try:
         print(datetime.datetime.now())
-        print("[*] starting valve spoofing")
+        print("[*] starting multipoint attack")
         nfqueue.run()
     except KeyboardInterrupt:
         __setdown()
-        print("[*] stopping valve spoofing")
+        print("[*] stopping multipoint attack")
         print(datetime.datetime.now())
         nfqueue.unbind()
     return 1

@@ -38,7 +38,7 @@ from swat.plc1 import SWAT_P1_RIO_AI
 from swat.scaling import current_to_signal, signal_to_current, P1Level
 
 DIA = 1.38  # Tank 1 diameter
-FLOW_BIAS = 0.8  # Water flow in m^3/h
+FLOW_BIAS = 1.5  # Water flow in m^3/h
 _alevel = 0
 _elevel = 0
 _is_first_pck = True
