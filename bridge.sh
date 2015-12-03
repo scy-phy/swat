@@ -14,6 +14,3 @@ brctl addif br0 $ETH0 $ETH1
 brctl setageing br0 0
 brctl stp  br0 off
 ifconfig br0 up
-
-#not sure if this is required
-echo 1 > /proc/sys/net/ipv4/ip_forward
