@@ -1,0 +1,21 @@
+# Example configuration file for /etc/network/interfaces to automatically create the bridge
+# Nils, SUTD, 2015
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+auto wlan0
+
+
+auto eth2
+iface eth2 inet manual
+
+auto enx00051ba139b9
+iface enx00051ba139b9 inet manual
+
+auto br0
+iface br0 inet manual
+      bridge_ports eth2 enx00051ba139b9
+      bridge_stp off
+      # Disabling STP
+      bridge_ageing 0
+      # Disabling MAC learning
