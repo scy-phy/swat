@@ -25,6 +25,7 @@ Secure Water Testbed (SWaT) at the Singapore University of Technology and Design
 Documentation: SWaT's Control Panels and Electrical Drawings manual.
 """
 from scapy.main import interact
+from swat import *
 
 banner = 'Add-on: Scapy Dissector for Ethernet/IP Implicit I/O messages' \
          '\n\tat the Ring Level of the Secure Water Testbed (SWaT)'

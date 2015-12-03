@@ -58,3 +58,7 @@ def signal_to_current(scale_in, scaling):
     :param scaling: scaling constants.
     :return: current value.
     """
+    result = scale_in - scaling.EUMIN
+    result /= (scaling.EUMAX - scaling.EUMIN) / (scaling.RAWMAX - scaling.RAWMIN)
+    result += scaling.RAWMIN
+    return 0 if result < 0 else result
