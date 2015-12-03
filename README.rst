@@ -1,3 +1,4 @@
+============================================
 SWaT's Ring Ethernet/IP dissectors for scapy
 ============================================
 
@@ -9,7 +10,46 @@ This project has been created to help analyzing the behavior of the SWaT (Secure
 Therefore, it strictly follows the design specifications in use by this system.
 
 Requirements
-------------
+============
 
 * Python 2.7
 * Scapy (http://www.secdev.org/projects/scapy/)
+
+Interactive Mode
+================
+
+To start interactive mode run:
+
+::
+    sudo python swat
+
+You should see:
+
+::
+    WARNING: No route found for IPv6 destination :: (no default route?)
+    Welcome to Scapy (2.3.1)
+    Add-on: Scapy Dissector for Ethernet/IP Implicit I/O messages
+            at the Ring Level of the Secure Water Testbed (SWaT)
+    >>>
+
+Examples on PLC-DLR-1
+---------------------
+
+Reading Analog Inpunts:
+
+::
+    >>> sniff(store=0, iface='eth0', prn=lambda p: show_p1_analog_inputs(p))
+    level: 300 mm (1231) flow: 2.4 m^2/h (321)
+    level: 300 mm (1232) flow: 2.4 m^2/h (321)
+    level: 300 mm (1232) flow: 2.4 m^2/h (321)
+    level: 301 mm (1233) flow: 2.4 m^2/h (321)
+    .
+    .
+    .
+
+Currently defined sniffing functions:
+
+* Analog Inputs: show_p1_analog_inputs
+* Wireless Analog Inputs: show_p1_w_analog_inputs (must be tested)
+* Digital Inputs: show_p1_digital_inputs
+* Digital Outputs: show_p1_digital_outputs
