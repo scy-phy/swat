@@ -86,6 +86,8 @@ class DLR(scapy_all.Packet):
         ],
         3: [
             # Neighbor Respnse
+            scapy_all.ByteField('Neighbor_Response_Source_Port',None),
+            scapy_all.StrField('Reserved',None)
         ],
         4: [
             # Link Status/Neighbor Status
@@ -127,12 +129,32 @@ class DLR(scapy_all.Packet):
         ],
         8: [
             # Advertise
+            scapy_all.ByteEnumField('Advertise_Gateway_State',0,{
+                0x01:"ACTIVE_LISTEN_STATE",
+                0x02:"ACTIVE_NORMAL_STATE",
+                0x03:"FAULT_STATE",
+                0:None,
+            }),
+            scapy_all.ByteField('Advertise_Gateway_Precedence',0),
+            scapy_all.IntField('Advertise_Interval',0),
+            scapy_all.IntField('Advertise_Timeout',0),
+            scapy_all.BitEnumField('Learning_Update_Enable',None,1,{
+                0: "DISABLED",
+                1: "ENABLED",
+            }),
+            scapy_all.StrField('Reserved',None),
         ],
         9: [
             # Flush Table
+            scapy_all.BitEnumField('Learning_Update_Enable',None,1, {
+                0: "DISABLED",
+                1: "ENABLED",
+            }),
+            scapy_all.StrField('Reserved',None),
         ],
         10: [
             # Learing Update
+            scapy_all.StrField('Reserved',None),
         ],
     }
     # constructor
