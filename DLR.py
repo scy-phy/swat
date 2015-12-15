@@ -243,6 +243,19 @@ class DLR(scapy_all.Packet):
             self.raw_packet_cache = raw
         self.explicit = 1
         return s
-
+    def self_build(self, field_pos_list=None):
+        # if self.raw_packet_cache is not None:
+        #     return self.raw_packet_cache
+        p=""
+        for f in self.fields_desc:
+            val = self.getfieldval(f.name)
+            if isinstance(val, scapy_all.RawVal):
+                sval = str(val)
+                p += sval
+                if field_pos_list is not None:
+                    field_pos_list.append( (f.name, sval.encode("string_escape"), len(p), len(sval) ) )
+            else:
+                p = f.addfield(self, p, val)
+        return p
 scapy_all.bind_layers(layer.l2.Dot1Q, DLR, type=0x80e1)
 # scapy_all.bind_layers(DlrBase,DlrBeacon,Frame_Type=1)
