@@ -1,9 +1,9 @@
 #Scapy implementation of DLR protocol
 
 ## Introduction
-This module implements [DLR](http://www.iebmedia.com/index.php?id=6113&parentid=63&themeid=255&showdetail=true) (Device Level Ring) protocol with [Scapy](http://www.secdev.org/projects/scapy/doc/usage.html), which will be applied to miniCPS for Cyber Security Research on SWaT testbed at SUTD.
+This module implements [DLR](http://www.iebmedia.com/index.php?id=6113&parentid=63&themeid=255&showdetail=true) (Device Level Ring) protocol with [Scapy](http://www.secdev.org/projects/scapy/doc/usage.html), which will be applied to MiniCPS for Cyber Security Research on SWaT testbed at SUTD.
 
-## Enrionment Setup
+## Environment Setup
 The following elements are required for environment set up.
 
 1. Python 2.7.10
@@ -51,7 +51,7 @@ With Method2 such hassles can be avoided.
 
 If you have a dissected packet, this method is preferred.
 
-With str() method or build() method of a packet you can get it's raw string format, so it would be more convinient to directly build new packets with raw string.
+With str() method or build() method of a packet you can get it's raw string format, so it would be more convenient to directly build new packets with raw string.
 
 	a = #an dissected packet
 	raw_string = str(a) #get the raw string
