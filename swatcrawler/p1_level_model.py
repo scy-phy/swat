@@ -70,6 +70,7 @@ def get_model_parameters(packet):
 
 def calculate_cusum():
     global _pump1_in, _pump, _rlevel, _elevel, cusum
+    # equation
     u = _flow / (3600 * math.pi * math.pow(DIA / 2, 2))  # Water volume change
     u *= _valve - _pump  # Direction of water volume change
     _elevel = _elevel + u + L * (_rlevel - _elevel)
@@ -107,13 +108,15 @@ def start():
     try:
         # Thread to read real value before injection
         t_sniff_eth0 = threading.Thread(target=scapy_all.sniff,
-                                        kwargs={'iface': 'eth0', 'store': 0,
+                                        kwargs={'iface': 'eth0', 
+                                                'store': 0,
                                                 'prn': lambda p: read_real_level(p),
                                                 'stop_filter': lambda p: stop(p)})
 
         # Thread to read model parameters after injection
         t_sniff_eth1 = threading.Thread(target=scapy_all.sniff,
-                                        kwargs={'iface': 'eth1', 'store': 0,
+                                        kwargs={'iface': 'eth1', 
+                                                'store': 0,
                                                 'prn': lambda p: get_model_parameters(p),
                                                 'stop_filter': lambda p: stop(p)})
 
@@ -122,7 +125,8 @@ def start():
         t_sniff_eth0.start()
         t_sniff_eth1.start()
         t_detection.start()
-        signal.pause()
+        signal.pause()  # wait for a signal
+
     except KeyboardInterrupt:
         t_detection.stop()
         t_detection.join()
