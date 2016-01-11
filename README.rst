@@ -20,7 +20,9 @@ On Debian or Ubuntu, install these files with::
 
     apt-get install build-essential python-dev libnetfilter-queue-dev
 
-* Python bindings for NetfilterQueue (https://github.com/fqrouter/python-netfilterqueue)
+* Python bindings for NetfilterQueue (https://github.com/fqrouter/python-netfilterqueue). Install with `python setup.py`
+
+In addition, python-scapy is required (install with apt-get)
 
 Attacking with SWaTAssault
 ==========================
