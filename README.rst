@@ -15,10 +15,11 @@ Requirements
 * Python 2.7
 * Scapy (http://www.secdev.org/projects/scapy/)
 * NetfilterQueue
+* VLAN config utility
 
 On Debian or Ubuntu, install these files with::
 
-    apt-get install build-essential python-dev libnetfilter-queue-dev
+    apt-get install build-essential python-dev libnetfilter-queue-dev vlan
 
 * Python bindings for NetfilterQueue (https://github.com/fqrouter/python-netfilterqueue). Install with `python setup.py`
 
